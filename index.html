@@ -1,0 +1,624 @@
+                
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MITC Industrial AI - Trợ lý thông minh</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 1000px;
+            height: 100vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .chat-header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 20px 25px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-header h1 span {
+            font-size: 1.8rem;
+        }
+
+        .chat-header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-top: 8px;
+        }
+
+        /* Khu vực tin nhắn */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f8f9fa;
+        }
+
+        /* Tin nhắn */
+        .message {
+            display: flex;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+        }
+
+        .assistant-message {
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 12px 18px;
+            border-radius: 20px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .user-message .message-content {
+            background: #1a73e8;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .assistant-message .message-content {
+            background: white;
+            color: #1a1a1a;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+        }
+
+        /* Avatar nhỏ */
+        .avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .assistant-message {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .user-message {
+            display: flex;
+            flex-direction: row-reverse;
+        }
+
+        .user-message .avatar {
+            margin-left: 10px;
+            margin-right: 0;
+            background: #1a73e8;
+            color: white;
+        }
+
+        .assistant-avatar {
+            background: #e8eef3;
+            color: #1a73e8;
+        }
+
+        /* Input area */
+        .chat-input-area {
+            display: flex;
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 15px;
+            resize: none;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+            max-height: 120px;
+        }
+
+        #chat-input:focus {
+            border-color: #1a73e8;
+        }
+
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 10px;
+        }
+
+        /* Scrollbar đẹp */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .message {
+                max-width: 95%;
+            }
+            .chat-header h1 {
+                font-size: 1.2rem;
+            }
+            button {
+                padding: 10px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-header">
+        <h1>
+            <span>🤖</span> MITC INDUSTRIAL AI
+        </h1>
+        <p>Trợ lý thông minh hỗ trợ học tập và giảng dạy</p>
+        <div class="badge">⚡ Chuyên ngành Điều khiển & Tự động hóa</div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+        <!-- Tin nhắn chào mừng sẽ được thêm bằng JavaScript -->
+    </div>
+
+    <div class="chat-input-area">
+        <textarea id="chat-input" rows="1" placeholder="💬 Nhập câu hỏi của bạn về Tự động hóa, PLC, Vi điều khiển, SCADA..."></textarea>
+        <button id="send-button">
+            📤 Gửi
+        </button>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // ⚠️ QUAN TRỌNG: HÃY THAY API_KEY BẰNG CỦA BẠN
+    // ============================================================
+    const API_KEY = 'AIzaSyCKjWcQ0z2HWxIcWHf46NxzIKWj-9DIcCg';  // ← PASTE API KEY CỦA BẠN VÀO ĐÂY
+    
+    // Hệ thống Prompt - Định nghĩa tính cách cho AI
+    const SYSTEM_PROMPT = `Bạn là MITC INDUSTRIAL AI, một trợ lý ảo chuyên nghiệp được phát triển bởi giảng viên: Phan Thành Minh và Huỳnh Dương Khánh Linh, Trường Cao đẳng Công Thương Miền Trung (MITC).
+    
+NHIỆM VỤ CỦA BẠN:
+- Hỗ trợ sinh viên và giảng viên trong việc giảng dạy và học tập chuyên ngành Công nghệ Kỹ thuật Điều khiển và Tự động hóa.
+- Trả lời các câu hỏi về: Lý thuyết điều khiển, PLC (Siemens, Mitsubishi), Vi điều khiển (Arduino, STM32), Cảm biến, Cơ cấu chấp hành, PID, SCADA, Mạng truyền thông công nghiệp.
+
+PHONG CÁCH:
+- Chuyên nghiệp, chính xác, thân thiện
+- Ưu tiên giải thích dễ hiểu, có ví dụ minh họa
+- Nếu câu hỏi về bài tập, hãy hướng dẫn từng bước, không làm thay toàn bộ
+- Nếu không biết câu trả lời chính xác, hãy nói: "Tôi chưa có thông tin đầy đủ về vấn đề này. Bạn nên tham khảo thêm giáo trình hoặc hỏi trực tiếp giảng viên."
+
+GIỚI THIỆU BẢN THÂN KHI ĐƯỢC HỎI: "Tôi là MITC INDUSTRIAL AI - trợ lý ảo chuyên ngành Điều khiển và Tự động hóa, được tạo ra bởi Giảng viên: Phan Thành Minh @ Huỳnh Dương Khánh Linh, Trường Cao đẳng Công Thương Miền Trung."`;
+
+    // Cấu hình API
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${API_KEY}`;
+    
+    // Lưu lịch sử hội thoại
+    let conversationHistory = [
+        { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
+        { role: "model", parts: [{ text: "OK, tôi đã hiểu vai trò và nhiệm vụ của mình. Tôi sẽ hoạt động với tư cách là MITC INDUSTRIAL AI, chuyên hỗ trợ ngành Điều khiển và Tự động hóa." }] }
+    ];
+    
+    // DOM elements
+    const messagesContainer = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button');
+    
+    // Hàm thêm tin nhắn vào giao diện
+    function addMessageToUI(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        messageDiv.style.animation = 'fadeIn 0.3s ease';
+        
+        if (sender === 'assistant') {
+            messageDiv.innerHTML = `
+                <div class="avatar assistant-avatar">🤖</div>
+                <div class="message-content">${formatMessage(text)}</div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="message-content">${formatMessage(text)}</div>
+                <div class="avatar">👤</div>
+            `;
+        }
+        
+        messagesContainer.appendChild(messageDiv);
+        scrollToBottom();
+    }
+    
+    // Định dạng tin nhắn (xuống dòng, link...)
+    function formatMessage(text) {
+        return text
+            .replace(/\n/g, '<br>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    }
+    
+    // Hiển thị loading
+    function showLoading() {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loading-message';
+        loadingDiv.className = 'message assistant-message';
+        loadingDiv.innerHTML = `
+            <div class="avatar assistant-avatar">🤖</div>
+            <div class="message-content" style="background:#f0f0f0;">
+                <span>⏳</span> Đang suy nghĩ...
+            </div>
+        `;
+        messagesContainer.appendChild(loadingDiv);
+        scrollToBottom();
+    }
+    
+    function hideLoading() {
+        const loadingDiv = document.getElementById('loading-message');
+        if (loadingDiv) loadingDiv.remove();
+    }
+    
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    // Gửi tin nhắn đến Gemini API
+    async function sendToGemini(userMessage) {
+        // Thêm tin nhắn người dùng vào lịch sử
+        conversationHistory.push({ role: "user", parts: [{ text: userMessage }] });
+        
+        // Giới hạn lịch sử (giữ 20 tin nhắn gần nhất để tránh quá dài)
+        if (conversationHistory.length > 30) {
+            conversationHistory = conversationHistory.slice(-20);
+        }
+        
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: conversationHistory,
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 2048,
+                    }
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                const botReply = data.candidates[0].content.parts[0].text;
+                // Lưu phản hồi vào lịch sử
+                conversationHistory.push({ role: "model", parts: [{ text: botReply }] });
+                return botReply;
+            } else {
+                console.error('API Error:', data);
+                return "❌ Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.\n\nChi tiết: " + (data.error?.message || "Không xác định");
+            }
+        } catch (error) {
+            console.error('Network Error:', error);
+            return "⚠️ Không thể kết nối đến server. Vui lòng kiểm tra kết nối internet và API Key của bạn.";
+        }
+    }
+    
+    // Xử lý khi gửi tin nhắn
+    async function handleSendMessage() {
+        const userText = chatInput.value.trim();
+        if (!userText) return;
+        
+        // Clear input và reset height
+        chatInput.value = '';
+        chatInput.style.height = 'auto';
+        
+        // Hiển thị tin nhắn người dùng
+        addMessageToUI(userText, 'user');
+        
+        // Hiển thị loading
+        showLoading();
+        
+        // Gửi và nhận phản hồi
+        const botResponse = await sendToGemini(userText);
+        
+        // Ẩn loading
+        hideLoading();
+        
+        // Hiển thị phản hồi
+        addMessageToUI(botResponse, 'assistant');
+    }
+    
+    // Xử lý phím Enter (Shift+Enter để xuống dòng)
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    });
+    
+    // Xử lý nút gửi
+    sendButton.addEventListener('click', handleSendMessage);
+    
+    // Tự động resize textarea
+    chatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    
+    // Thêm tin nhắn chào mừng
+    function addWelcomeMessage() {
+        const welcomeText = `Xin chào! 👋
+
+Tôi là **MITC INDUSTRIAL AI**, trợ lý ảo chuyên ngành **Công nghệ Kỹ thuật Điều khiển và Tự động hóa**.
+
+Tôi có thể giúp bạn:
+• 📖 Giải thích lý thuyết điều khiển, PLC, Vi điều khiển, Tự động hoá công nghiệp, Mạng truyền thông công nghiệp…
+• 🔧 Hướng dẫn giải bài tập, thực hành và thí nghiệm
+• 📊 Tra cứu thông số kỹ thuật, mã lỗi
+• 💡 Gợi ý phương pháp học tập hiệu quả
+
+Hãy bắt đầu bằng cách nhập câu hỏi hay chèn ảnh 📷 của bạn bên dưới nhé! 🚀`;
+        
+        addMessageToUI(welcomeText, 'assistant');
+    }
+    
+    // Khởi tạo
+    addWelcomeMessage();
+    
+    // Kiểm tra API Key (cảnh báo nếu chưa thay)
+    if (API_KEY === 'YOUR_API_KEY_HERE') {
+        setTimeout(() => {
+            addMessageToUI("⚠️ **LƯU Ý:** Bạn chưa cấu hình API Key. Vui lòng thay thế biến `API_KEY` trong code bằng API Key thật từ Google AI Studio (aistudio.google.com).", 'assistant');
+        }, 1000);
+    }
+
+// chụp nhận diện ảnh
+
+
+
+// ============================================================
+// 📷 PHẦN 1: HÀM CHUYỂN FILE ẢNH THÀNH BASE64
+// ============================================================
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
+
+// ============================================================
+// 📷 PHẦN 2: HÀM GỬI ẢNH LÊN GEMINI ĐỂ PHÂN TÍCH
+// ============================================================
+async function sendImageToGemini(imageBase64, question) {
+    // Tách phần dữ liệu ảnh thuần (bỏ header)
+    const base64Data = imageBase64.split(',')[1];
+    
+    // Xác định loại ảnh (jpeg, png, v.v.)
+    const mimeMatch = imageBase64.match(/data:image\/(\w+);base64,/);
+    const mimeType = mimeMatch ? `image/${mimeMatch[1]}` : 'image/jpeg';
+    
+    // Nếu không có câu hỏi, dùng câu hỏi mặc định
+    const userQuestion = question || "Hãy phân tích hình ảnh này về mặt kỹ thuật. Đây là mạch điện gì? Có lỗi gì không? Hãy giải thích chi tiết cho sinh viên ngành Điều khiển và Tự động hóa.";
+    
+    const requestBody = {
+        contents: [{
+            parts: [
+                {
+                    inlineData: {
+                        mimeType: mimeType,
+                        data: base64Data
+                    }
+                },
+                {
+                    text: userQuestion
+                }
+            ]
+        }]
+    };
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            console.error('API Error:', data);
+            return "❌ Không thể phân tích ảnh. Vui lòng thử lại.\n\nChi tiết lỗi: " + (data.error?.message || "Không xác định");
+        }
+    } catch (error) {
+        console.error('Network Error:', error);
+        return "⚠️ Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.";
+    }
+}
+
+// ============================================================
+// 📷 PHẦN 3: THÊM NÚT UPLOAD ẢNH VÀO GIAO DIỆN
+// ============================================================
+function addImageUploadFeature() {
+    // Tìm vùng nhập liệu
+    const inputArea = document.querySelector('.chat-input-area');
+    if (!inputArea) {
+        console.error('Không tìm thấy .chat-input-area');
+        return;
+    }
+    
+    // Tạo input file ẩn
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/jpeg,image/png,image/gif,image/webp';
+    fileInput.style.display = 'none';
+    fileInput.id = 'hidden-file-input';
+    
+    // Tạo nút upload ảnh
+    const imageButton = document.createElement('button');
+    imageButton.innerHTML = '📷';
+    imageButton.title = 'Upload ảnh mạch điện, sơ đồ, hoặc ảnh lỗi';
+    imageButton.type = 'button';
+    imageButton.id = 'image-upload-btn';
+    imageButton.style.background = '#6c757d';
+    imageButton.style.marginRight = '8px';
+    imageButton.style.padding = '10px 16px';
+    
+    // Xử lý khi click nút ảnh
+    imageButton.onclick = () => {
+        fileInput.click();
+    };
+    
+    // Xử lý khi chọn file
+    fileInput.onchange = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Kiểm tra kích thước (tối đa 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            addMessageToUI("⚠️ Ảnh quá lớn (tối đa 5MB). Vui lòng chọn ảnh nhỏ hơn.", 'assistant');
+            return;
+        }
+        
+        // Hiển thị thông báo
+        addMessageToUI(`📷 Đã nhận ảnh: "${file.name}"\n⏳ Đang phân tích...`, 'user');
+        
+        // Hiển thị loading
+        showLoading();
+        
+        try {
+            // Chuyển ảnh thành base64
+            const base64Image = await fileToBase64(file);
+            
+            // Gửi lên Gemini
+            const analysis = await sendImageToGemini(base64Image, null);
+            
+            // Ẩn loading
+            hideLoading();
+            
+            // Hiển thị kết quả
+            addMessageToUI(analysis, 'assistant');
+            
+        } catch (error) {
+            hideLoading();
+            console.error('Lỗi:', error);
+            addMessageToUI("❌ Có lỗi khi xử lý ảnh: " + error.message, 'assistant');
+        }
+        
+        // Reset input để có thể upload lại
+        fileInput.value = '';
+    };
+    
+    // Tìm nút gửi hiện tại
+    const sendButton = document.getElementById('send-button');
+    if (sendButton) {
+        // Chèn nút ảnh TRƯỚC nút gửi
+        inputArea.insertBefore(imageButton, sendButton);
+    } else {
+        inputArea.appendChild(imageButton);
+    }
+    
+    // Thêm input file vào body
+    document.body.appendChild(fileInput);
+    
+    console.log('✅ Đã thêm nút upload ảnh thành công!');
+}
+
+// ============================================================
+// 📷 PHẦN 4: TỰ ĐỘNG THÊM NÚT KHI TRANG TẢI XONG
+// ============================================================
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addImageUploadFeature);
+} else {
+    addImageUploadFeature();
+}
+
+
+</script>
+</body>
+</html>  
+
+
+
